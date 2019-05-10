@@ -108,7 +108,7 @@ void RenderWindow::init()
 
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
-    mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, 2.f));
+    mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, -2.f));
 }
 
 ///Called each frame - doing the rendering
@@ -300,9 +300,9 @@ void RenderWindow::handleInput()
     if(mInput.RMB)
     {
         if(mInput.W)
-            mCurrentCamera->setSpeed(-mCameraSpeed);
-        if(mInput.S)
             mCurrentCamera->setSpeed(mCameraSpeed);
+        if(mInput.S)
+            mCurrentCamera->setSpeed(-mCameraSpeed);
         if(mInput.D)
             mCurrentCamera->moveRight(mCameraSpeed);
         if(mInput.A)

@@ -369,8 +369,8 @@ void Matrix4x4::perspective(GLfloat fieldOfView, GLfloat aspectRatio, GLfloat ne
     {
         uw,     0.f,    0.f,                                        0.f,
                 0.f,    uh,     0.f,                                        0.f,
-                0.f,    0.f,    (farPlane)/(farPlane-nearPlane), -farPlane*nearPlane/(farPlane-nearPlane),
-                0.f,    0.f,    1.f,                                        0.f
+                0.f,    0.f,    -(farPlane+nearPlane)/(farPlane-nearPlane), -2*farPlane*nearPlane/(farPlane-nearPlane),
+                0.f,    0.f,    -1.f,                                        0.f
     };
 
 

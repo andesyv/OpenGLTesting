@@ -13,14 +13,14 @@ Camera::Camera()
 void Camera::pitch(float degrees)
 {
     //  rotate around mRight
-    mPitch += degrees;
+    mPitch -= degrees;
     updateForwardVector();
 }
 
 void Camera::yaw(float degrees)
 {
     // rotate around mUp
-    mYaw += degrees;
+    mYaw -= degrees;
     updateForwardVector();
 }
 
