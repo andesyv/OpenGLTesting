@@ -37,6 +37,8 @@ RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
 
 RenderWindow::~RenderWindow()
 {
+    for (auto &item : mVisualObjects)
+        delete item;
 }
 
 /// Sets up the general OpenGL stuff and the buffers needed to render a triangle
@@ -106,6 +108,11 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
+    std::shared_ptr<VisualObject> obj = std::make_shared<TriangleSurface>();
+    obj->mMatrix.translate(0.5f, 0.f, -1.5f);
+    obj->init();
+    mInvisibleScene.push_back(std::move(obj));
+
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
     mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, -2.f));
@@ -123,7 +130,13 @@ void RenderWindow::render()
     mContext->makeCurrent(this); //must be called every frame (every time mContext->swapBuffers is called)
 
     //to clear the screen for each redraw
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glStencilFunc(GL_ALWAYS, 3, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilMask(0x00);
 
     //******** This should be done with a loop!
     {
@@ -133,12 +146,25 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
         mVisualObjects[0]->draw();
 
+        glStencilMask(0xFF);
         glUseProgram(mShaderProgram[1]->getProgram());
         glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
         glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glUniform1i(mTextureUniform, 1);
         mVisualObjects[1]->draw();
+    }
+
+    // Draw invisible scene only where the scencil buffer allows it:
+    glDisable(GL_DEPTH_TEST);
+    glStencilMask(0x00);
+    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+    for (auto &obj : mInvisibleScene) {
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv(mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv(mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv(mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+        obj->draw();
     }
 
     //Calculate framerate before

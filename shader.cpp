@@ -121,6 +121,12 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLcha
     glDeleteShader( fragment );
     if(geometryPath)
         glDeleteShader(geometry);
+
+
+    // Get matrix uniform locations
+    mMatrixUniform = glGetUniformLocation(program, "mMatrix");
+    vMatrixUniform = glGetUniformLocation(program, "vMatrix");
+    pMatrixUniform = glGetUniformLocation(program, "pMatrix");
 }
 
 void Shader::use()

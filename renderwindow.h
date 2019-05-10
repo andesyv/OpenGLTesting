@@ -11,6 +11,7 @@
 #include "matrix4x4.h"
 #include "visualobject.h"
 #include "input.h"
+#include <memory>
 
 class QOpenGLContext;
 class Shader;
@@ -59,6 +60,7 @@ private:
     GLint mTextureUniform{-1};
 
     std::vector<VisualObject*> mVisualObjects;
+    std::vector<std::shared_ptr<VisualObject>> mInvisibleScene;
 
     Camera *mCurrentCamera{nullptr};
 
