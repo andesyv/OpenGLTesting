@@ -20,6 +20,8 @@ public:
 
     std::string mName;
 
+    Shader *mShader{nullptr};
+
     RenderWindow *mRenderWindow; //Just to be able to call checkForGLerrors()
 
 protected:

@@ -67,7 +67,7 @@ private:
     bool mWireframe{false};
 
     Input mInput;
-    float mCameraSpeed{0.05f};
+    float mCameraSpeed{1.f};
     float mCameraRotateSpeed{0.1f};
     int mMouseXlast{0};
     int mMouseYlast{0};
@@ -85,7 +85,7 @@ private:
 
     void startOpenGLDebugger();
 
-    void handleInput();
+    void handleInput(float deltaTime = 0.f);
 
 protected:
     //The QWindow that we inherit from has these functions to capture

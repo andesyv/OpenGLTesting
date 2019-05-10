@@ -14,6 +14,7 @@
 
 #include "xyz.h"
 #include "trianglesurface.h"
+#include "octahedronball.h"
 
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow)
@@ -109,13 +110,21 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
-    auto obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
+    std::shared_ptr<VisualObject> obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
     obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
+    obj->mShader = mShaderProgram[1];
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
 
-    obj = std::make_shared<TriangleSurface>();
-    obj->mMatrix.translate(0.5f, 0.f, -1.5f);
+//    obj = std::make_shared<TriangleSurface>();
+//    obj->mMatrix.translate(0.2f, 0.f, -0.5f);
+//    obj->init();
+//    mInvisibleScene.push_back(std::move(obj));
+
+    obj = std::make_shared<OctahedronBall>(3);
+    obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
+    obj->mMatrix.scale(0.2f, 0.2f, 0.2f);
+    obj->mShader = mShaderProgram[0];
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
 
@@ -127,8 +136,9 @@ void RenderWindow::init()
 ///Called each frame - doing the rendering
 void RenderWindow::render()
 {
+    const float deltaTime = mTimeStart.nsecsElapsed() / 1000000000.f;
     //input
-    handleInput();
+    handleInput(deltaTime);
 
     mCurrentCamera->update();
 
@@ -166,10 +176,17 @@ void RenderWindow::render()
     glStencilMask(0x00);
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
     for (auto &obj : mInvisibleScene) {
-        glUseProgram(mShaderProgram[1]->getProgram());
-        glUniformMatrix4fv(mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv(mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        glUniformMatrix4fv(mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+        if (obj->mShader != nullptr) {
+            obj->mShader->use();
+            glUniformMatrix4fv(obj->mShader->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+            glUniformMatrix4fv(obj->mShader->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+            glUniformMatrix4fv(obj->mShader->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+        } else {
+            glUseProgram(mShaderProgram[0]->getProgram());
+            glUniformMatrix4fv(mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+            glUniformMatrix4fv(mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+            glUniformMatrix4fv(mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+        }
         obj->draw();
     }
 
@@ -225,7 +242,7 @@ void RenderWindow::exposeEvent(QExposeEvent *)
     }
     mAspectratio = static_cast<float>(width()) / height();
     //    qDebug() << mAspectratio;
-    mCurrentCamera->mProjectionMatrix.perspective(45.f, mAspectratio, 1.f, 100.f);
+    mCurrentCamera->mProjectionMatrix.perspective(45.f, mAspectratio, 0.1f, 100.f);
     //    qDebug() << mCamera.mProjectionMatrix;
 }
 
@@ -325,24 +342,24 @@ void RenderWindow::setCameraSpeed(float value)
         mCameraSpeed = 0.3f;
 }
 
-void RenderWindow::handleInput()
+void RenderWindow::handleInput(float deltaTime)
 {
     //Camera
     mCurrentCamera->setSpeed(0.f);  //cancel last frame movement
     if(mInput.RMB)
     {
         if(mInput.W)
-            mCurrentCamera->setSpeed(mCameraSpeed);
+            mCurrentCamera->setSpeed(mCameraSpeed * deltaTime);
         if(mInput.S)
-            mCurrentCamera->setSpeed(-mCameraSpeed);
+            mCurrentCamera->setSpeed(-mCameraSpeed * deltaTime);
         if(mInput.D)
-            mCurrentCamera->moveRight(mCameraSpeed);
+            mCurrentCamera->moveRight(mCameraSpeed * deltaTime);
         if(mInput.A)
-            mCurrentCamera->moveRight(-mCameraSpeed);
+            mCurrentCamera->moveRight(-mCameraSpeed * deltaTime);
         if(mInput.Q)
-            mCurrentCamera->updateHeigth(mCameraSpeed);
+            mCurrentCamera->updateHeigth(mCameraSpeed * deltaTime);
         if(mInput.E)
-            mCurrentCamera->updateHeigth(-mCameraSpeed);
+            mCurrentCamera->updateHeigth(-mCameraSpeed * deltaTime);
     }
 }
 

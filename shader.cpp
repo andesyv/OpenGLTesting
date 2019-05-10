@@ -127,6 +127,9 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLcha
     mMatrixUniform = glGetUniformLocation(program, "mMatrix");
     vMatrixUniform = glGetUniformLocation(program, "vMatrix");
     pMatrixUniform = glGetUniformLocation(program, "pMatrix");
+
+    if (mMatrixUniform < 0 || vMatrixUniform < 0 || pMatrixUniform < 0)
+        std::cout << "Uniform isn't quite right!" << std::endl;
 }
 
 void Shader::use()
