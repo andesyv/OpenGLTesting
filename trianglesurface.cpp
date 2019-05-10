@@ -3,6 +3,7 @@
 #include "math_constants.h"
 #include <cmath>
 #include <QDebug>
+#include <algorithm>
 
 TriangleSurface::TriangleSurface() : VisualObject() {
     Vertex v{};
@@ -22,9 +23,11 @@ TriangleSurface::TriangleSurface() : VisualObject() {
     mMatrix.setToIdentity();
 }
 
-TriangleSurface::TriangleSurface(std::string filename) : VisualObject()
+TriangleSurface::TriangleSurface(std::string filename, bool inverse) : VisualObject()
 {
     readFile(filename);
+    if (inverse)
+        std::reverse(mVertices.begin(), mVertices.end()); // Reverse order
     mMatrix.setToIdentity();
 }
 

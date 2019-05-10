@@ -7,7 +7,7 @@ class TriangleSurface : public VisualObject
 {
 public:
     TriangleSurface();
-    TriangleSurface(std::string filename);
+    TriangleSurface(std::string filename, bool inverse = false);
     ~TriangleSurface() override;
 
     virtual void init() override;

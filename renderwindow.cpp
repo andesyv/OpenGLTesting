@@ -105,10 +105,16 @@ void RenderWindow::init()
 
     //testing triangle surface class
     temp = new TriangleSurface();
+    temp->mMatrix.scale(2.f, 2.f, 2.f);
     temp->init();
     mVisualObjects.push_back(temp);
 
-    std::shared_ptr<VisualObject> obj = std::make_shared<TriangleSurface>();
+    auto obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
+    obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
+    obj->init();
+    mInvisibleScene.push_back(std::move(obj));
+
+    obj = std::make_shared<TriangleSurface>();
     obj->mMatrix.translate(0.5f, 0.f, -1.5f);
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
