@@ -81,9 +81,9 @@ void RenderWindow::init()
     //NB: hardcoded path to files! You have to change this if you change directories for the project.
     //Qt makes a build-folder besides the project folder. That is why we go down one directory
     // (out of the build-folder) and then up into the project folder.
-    mShaderProgram[0] = new Shader("../GSOpenGL2019/plainvertex.vert", "../GSOpenGL2019/plainfragment.frag");
+    mShaderProgram[0] = new Shader("../OpenGLTesting/plainvertex.vert", "../OpenGLTesting/plainfragment.frag");
     qDebug() << "Plain shader program id: " << mShaderProgram[0]->getProgram();
-    mShaderProgram[1]= new Shader("../GSOpenGL2019/texturevertex.vert", "../GSOpenGL2019/texturefragmet.frag");
+    mShaderProgram[1]= new Shader("../OpenGLTesting/texturevertex.vert", "../OpenGLTesting/texturefragmet.frag");
     qDebug() << "Texture shader program id: " << mShaderProgram[1]->getProgram();
 
     setupPlainShader(0);
@@ -91,7 +91,7 @@ void RenderWindow::init()
 
     //**********************  Texture stuff: **********************
     mTexture[0] = new Texture();
-    mTexture[1] = new Texture("../GSOpenGL2019/Assets/hund.bmp");
+    mTexture[1] = new Texture("../OpenGLTesting/Assets/hund.bmp");
 
     //Set the textures loaded to a texture unit
     glActiveTexture(GL_TEXTURE0);
@@ -104,27 +104,24 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
-    //testing triangle surface class
-    temp = new TriangleSurface();
-    temp->mMatrix.scale(2.f, 2.f, 2.f);
+    temp = new TriangleSurface{"../OpenGLTesting/Assets/cube.txt"};
+    temp->mMatrix.translate(0.f, 0.5f, 0.f);
+    temp->mShader = mShaderProgram[1];
     temp->init();
     mVisualObjects.push_back(temp);
 
-    std::shared_ptr<VisualObject> obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
-    obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
+    //testing triangle surface class
+    temp = new TriangleSurface();
+    temp->mMatrix.rotateX(90.f);
+    temp->mMatrix.scale(5.f, 5.f, 5.f);
+    temp->mMatrix.translate(-0.25f, -0.25f, 0.f);
+    temp->init();
+    mVisualObjects.push_back(temp);
+
+    auto obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
+    obj->mMatrix.scale(1.f, -1.f, 1.f);
+    obj->mMatrix.translate(0.f, 0.5f, 0.f);
     obj->mShader = mShaderProgram[1];
-    obj->init();
-    mInvisibleScene.push_back(std::move(obj));
-
-//    obj = std::make_shared<TriangleSurface>();
-//    obj->mMatrix.translate(0.2f, 0.f, -0.5f);
-//    obj->init();
-//    mInvisibleScene.push_back(std::move(obj));
-
-    obj = std::make_shared<OctahedronBall>(3);
-    obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
-    obj->mMatrix.scale(0.2f, 0.2f, 0.2f);
-    obj->mShader = mShaderProgram[0];
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
 
@@ -162,13 +159,21 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
         mVisualObjects[0]->draw();
 
-        glStencilMask(0xFF);
         glUseProgram(mShaderProgram[1]->getProgram());
         glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
         glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glUniform1i(mTextureUniform, 1);
+        glUniform1f(glGetUniformLocation(mShaderProgram[1]->getProgram(), "colorAmount"), 1.f);
         mVisualObjects[1]->draw();
+
+        glStencilMask(0xFF);
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glUniform1f(glGetUniformLocation(mShaderProgram[1]->getProgram(), "colorAmount"), 0.f);
+        mVisualObjects[2]->draw();
     }
 
     // Draw invisible scene only where the scencil buffer allows it:
@@ -187,6 +192,7 @@ void RenderWindow::render()
             glUniformMatrix4fv(mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
             glUniformMatrix4fv(mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
         }
+        glUniform1f(glGetUniformLocation(mShaderProgram[1]->getProgram(), "colorAmount"), 0.3f);
         obj->draw();
     }
 
