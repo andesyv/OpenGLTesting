@@ -61,6 +61,7 @@ private:
 
     std::vector<VisualObject*> mVisualObjects;
     std::vector<std::shared_ptr<VisualObject>> mInvisibleScene;
+    std::vector<std::shared_ptr<VisualObject>> mInvisibleScene2;
 
     Camera *mCurrentCamera{nullptr};
 

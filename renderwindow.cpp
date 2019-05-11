@@ -91,13 +91,16 @@ void RenderWindow::init()
 
     //**********************  Texture stuff: **********************
     mTexture[0] = new Texture();
-    mTexture[1] = new Texture("../GSOpenGL2019/Assets/hund.bmp");
+    mTexture[1] = new Texture("../OpenGLTesting/Assets/hund.bmp");
+    mTexture[2] = new Texture("../OpenGLTesting/Assets/Extremelybuff.bmp");
 
     //Set the textures loaded to a texture unit
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture[0]->id());
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, mTexture[2]->id());
 
     //********************** Making the objects to be drawn **********************
     VisualObject *temp = new XYZ();
@@ -116,17 +119,33 @@ void RenderWindow::init()
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
 
-//    obj = std::make_shared<TriangleSurface>();
-//    obj->mMatrix.translate(0.2f, 0.f, -0.5f);
-//    obj->init();
-//    mInvisibleScene.push_back(std::move(obj));
-
     obj = std::make_shared<OctahedronBall>(3);
     obj->mMatrix.translate(0.5f, 0.5f, -0.5f);
     obj->mMatrix.scale(0.2f, 0.2f, 0.2f);
     obj->mShader = mShaderProgram[0];
     obj->init();
     mInvisibleScene.push_back(std::move(obj));
+
+    // Other plane and stuff
+    temp = new TriangleSurface();
+    temp->mMatrix.rotateY(180.f);
+    temp->mMatrix.translate(-1.f, 0.f, 0.f);
+    temp->mMatrix.scale(2.f, 2.f, 2.f);
+    temp->init();
+    mVisualObjects.push_back(temp);
+
+    obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cube.txt", true);
+    obj->mMatrix.translate(0.5f, 0.5f, 0.5f);
+    obj->mShader = mShaderProgram[1];
+    obj->init();
+    mInvisibleScene2.push_back(std::move(obj));
+
+    obj = std::make_shared<TriangleSurface>("../OpenGLTesting/Assets/cylinder.txt");
+    obj->mMatrix.translate(0.5f, 0.5f, 0.5f);
+    obj->mMatrix.scale(0.4f, 0.4f, 0.4f);
+    obj->mShader = mShaderProgram[0];
+    obj->init();
+    mInvisibleScene2.push_back(std::move(obj));
 
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
@@ -169,26 +188,67 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glUniform1i(mTextureUniform, 1);
         mVisualObjects[1]->draw();
+
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 5, 0xFF);
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glUniform1i(mTextureUniform, 1);
+        mVisualObjects[2]->draw();
+
+        glDisable(GL_DEPTH_TEST);
+        glStencilMask(0x00);
+
+        // Draw invisible scene 1
+        glStencilFunc(GL_EQUAL, 3, 0xFF);
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mInvisibleScene[0]->mMatrix.constData());
+        mInvisibleScene[0]->draw();
+
+        glUseProgram(mShaderProgram[0]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mInvisibleScene[1]->mMatrix.constData());
+        mInvisibleScene[1]->draw();
+
+        // Draw invisible scene 2
+        glStencilFunc(GL_EQUAL, 5, 0xFF);
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mInvisibleScene2[0]->mMatrix.constData());
+        glUniform1i(mTextureUniform, 2);
+        mInvisibleScene2[0]->draw();
+
+        glUseProgram(mShaderProgram[0]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mInvisibleScene2[1]->mMatrix.constData());
+        mInvisibleScene2[1]->draw();
     }
 
-    // Draw invisible scene only where the scencil buffer allows it:
-    glDisable(GL_DEPTH_TEST);
-    glStencilMask(0x00);
-    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-    for (auto &obj : mInvisibleScene) {
-        if (obj->mShader != nullptr) {
-            obj->mShader->use();
-            glUniformMatrix4fv(obj->mShader->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-            glUniformMatrix4fv(obj->mShader->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-            glUniformMatrix4fv(obj->mShader->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
-        } else {
-            glUseProgram(mShaderProgram[0]->getProgram());
-            glUniformMatrix4fv(mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-            glUniformMatrix4fv(mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-            glUniformMatrix4fv(mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
-        }
-        obj->draw();
-    }
+//    // Draw invisible scene only where the scencil buffer allows it:
+//    glDisable(GL_DEPTH_TEST);
+//    glStencilMask(0x00);
+//    glStencilFunc(GL_EQUAL, 3, 0xFF);
+//    for (auto &obj : mInvisibleScene) {
+//        if (obj->mShader != nullptr) {
+//            obj->mShader->use();
+//            glUniformMatrix4fv(obj->mShader->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+//            glUniformMatrix4fv(obj->mShader->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+//            glUniformMatrix4fv(obj->mShader->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+//        } else {
+//            glUseProgram(mShaderProgram[0]->getProgram());
+//            glUniformMatrix4fv(mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+//            glUniformMatrix4fv(mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+//            glUniformMatrix4fv(mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, obj->mMatrix.constData());
+//        }
+//        obj->draw();
+//    }
 
     //Calculate framerate before
     // checkForGLerrors() because that takes a long time
