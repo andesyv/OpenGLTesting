@@ -58,6 +58,9 @@ private:
     GLint pMatrixUniform1{-1};
     GLint mTextureUniform{-1};
 
+    unsigned int skyboxTextureID;
+    unsigned int skyboxVAO;
+
     std::vector<VisualObject*> mVisualObjects;
 
     Camera *mCurrentCamera{nullptr};
