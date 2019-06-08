@@ -22,6 +22,10 @@ public:
     //Get program number for this shader
     GLuint getProgram() const;
 
+    GLint mMatrixUniform{-1};
+    GLint vMatrixUniform{-1};
+    GLint pMatrixUniform{-1};
+
 private:
     GLuint program{0};
 };
