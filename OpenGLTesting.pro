@@ -39,6 +39,7 @@ HEADERS += \
     renderwindow.h \
     shader.h \
     mainwindow.h \
+    stb_image.h \
     triangle.h \
     texture.h \
     vertex.h \
@@ -56,4 +57,6 @@ DISTFILES += \
     plainfragment.frag \
     plainvertex.vert \
     texturefragmet.frag \
-    texturevertex.vert
+    texturevertex.vert \
+    skybox.vert \
+    skybox.frag

@@ -58,8 +58,8 @@ private:
     GLint pMatrixUniform1{-1};
     GLint mTextureUniform{-1};
 
-    unsigned int skyboxTextureID;
     unsigned int skyboxVAO;
+    unsigned int skyboxTextureID;
 
     std::vector<VisualObject*> mVisualObjects;
 
@@ -88,6 +88,7 @@ private:
 
     void handleInput();
 
+    unsigned int loadCubemap(const std::vector<std::string> &faces);
 protected:
     //The QWindow that we inherit from has these functions to capture
     // mouse and keyboard. Uncomment to use

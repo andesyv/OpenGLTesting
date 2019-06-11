@@ -3,11 +3,12 @@ layout (location = 0) in vec3 aPos;
 
 out vec3 TexCoords;
 
-uniform mat4 projection;
-uniform mat4 view;
+uniform mat4 pMatrix;
+uniform mat4 vMatrix;
 
 void main()
 {
-    TexCoords = normalize(aPos);
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    TexCoords = aPos;
+    mat4 viewMat = mat4(mat3(vMatrix));
+    gl_Position = (pMatrix * viewMat * vec4(aPos, 1.0)).xyww;
 }
