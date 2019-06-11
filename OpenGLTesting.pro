@@ -56,6 +56,8 @@ FORMS += \
 DISTFILES += \
     plainfragment.frag \
     plainvertex.vert \
+    reflection.frag \
+    reflection.vert \
     texturefragmet.frag \
     texturevertex.vert \
     skybox.vert \
