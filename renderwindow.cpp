@@ -213,6 +213,8 @@ void RenderWindow::init()
     qDebug() << "Skybox shader program id: " << mShaderProgram[2]->getProgram();
     mShaderProgram[3]= new Shader("../OpenGLTesting/reflection.vert", "../OpenGLTesting/reflection.frag");
     qDebug() << "Reflection shader program id: " << mShaderProgram[3]->getProgram();
+    mShaderProgram[4]= new Shader("../OpenGLTesting/reflection.vert", "../OpenGLTesting/refraction.frag");
+    qDebug() << "Refraction shader program id: " << mShaderProgram[4]->getProgram();
 
     setupPlainShader(0);
     setupTextureShader(1);
@@ -356,11 +358,11 @@ void RenderWindow::render()
         mVisualObjects[1]->draw();
 
         // Cube
-        mShaderProgram[3]->use();
-        glUniformMatrix4fv( mShaderProgram[3]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv( mShaderProgram[3]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        glUniformMatrix4fv( mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, cubeTrans.constData());
-        glUniform3fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), "cameraPos"), 1, mCurrentCamera->position().xP());
+        mShaderProgram[4]->use();
+        glUniformMatrix4fv( mShaderProgram[4]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[4]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[4]->mMatrixUniform, 1, GL_TRUE, cubeTrans.constData());
+        glUniform3fv(glGetUniformLocation(mShaderProgram[4]->getProgram(), "cameraPos"), 1, mCurrentCamera->position().xP());
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);

@@ -58,6 +58,7 @@ DISTFILES += \
     plainvertex.vert \
     reflection.frag \
     reflection.vert \
+    refraction.frag \
     texturefragmet.frag \
     texturevertex.vert \
     skybox.vert \
