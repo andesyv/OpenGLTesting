@@ -58,6 +58,9 @@ private:
     GLint pMatrixUniform1{-1};
     GLint mTextureUniform{-1};
 
+    unsigned int cubeVAO;
+    gsl::Matrix4x4 cubeTrans;
+
     unsigned int skyboxVAO;
     unsigned int skyboxTextureID;
 
