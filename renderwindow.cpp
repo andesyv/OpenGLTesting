@@ -15,6 +15,51 @@
 #include "xyz.h"
 #include "trianglesurface.h"
 
+float cubeVertices[] = {
+    // positions            // uvs        // normals
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,   0.0f,  0.0f, -1.0f,
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f,  0.0f, -1.0f,
+
+    -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,   0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   -1.0f,  0.0f,  0.0f,
+
+     0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,    1.0f, 1.0f,   0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,   0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,   0.0f, -1.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,   0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,   0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,    1.0f, 0.0f,   0.0f,  1.0f,  0.0f
+};
+
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow)
 {
@@ -103,6 +148,24 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
+    // Cube
+    glGenVertexArrays(1, &cubeVAO);
+    glBindVertexArray(cubeVAO);
+
+    unsigned int cubeVBO;
+    glGenBuffers(1, &cubeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (GLvoid*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     //testing triangle surface class
     temp = new TriangleSurface();
     temp->init();
@@ -112,8 +175,10 @@ void RenderWindow::init()
     //testing triangle surface class
     temp = new TriangleSurface();
     temp->init();
-    temp->mMatrix.scale(gsl::Vector3D{4.f, 4.f, 1.f});
-    temp->mMatrix.translate(0.1f, 1.2f, -20.f);
+    temp->mMatrix.rotateX(90.f);
+    temp->mMatrix.scale(gsl::Vector3D{30.f, 30.f, 1.f});
+    temp->mMatrix.translate(-0.25f, 0.f, 0.f);
+    // temp->mMatrix.translate(0.1f, 1.2f, -20.f);
     mVisualObjects.push_back(temp);
 
     //testing triangle surface class
@@ -179,6 +244,23 @@ void RenderWindow::render()
 //        glUniform2i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "windowSize"), width(), height());
 //        glUniform1f(glGetUniformLocation(mShaderProgram[2]->getProgram(), "threshold"), threshold);
         mVisualObjects[3]->draw();
+
+        // Cubes
+        glBindVertexArray(cubeVAO);
+        // First cube
+        gsl::Matrix4x4 mat;
+        mat.setToIdentity();
+        mat.translate(-3.f, 0.5f, -3.f);
+        glUniformMatrix4fv(mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mat.constData());
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // Second cube
+        mat.setToIdentity();
+        mat.scale(gsl::Vector3D{3.f, 3.f, 3.f});
+        mat.translate(2.f, 0.5f, -4.f);
+        glUniformMatrix4fv(mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mat.constData());
+        glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "textureSampler"), 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     //Calculate framerate before

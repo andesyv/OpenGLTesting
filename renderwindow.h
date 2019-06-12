@@ -63,6 +63,7 @@ private:
     GLint mTextureUniform{-1};
 
     std::vector<VisualObject*> mVisualObjects;
+    unsigned int cubeVAO;
 
     Camera *mCurrentCamera{nullptr};
 
