@@ -82,6 +82,8 @@ void RenderWindow::init()
     qDebug() << "Plain shader program id: " << mShaderProgram[0]->getProgram();
     mShaderProgram[1]= new Shader("../GSOpenGL2019/texturevertex.vert", "../GSOpenGL2019/texturefragmet.frag");
     qDebug() << "Texture shader program id: " << mShaderProgram[1]->getProgram();
+    mShaderProgram[2]= new Shader("../GSOpenGL2019/texturevertex.vert", "../OpenGLTesting/switchingShader.frag");
+    qDebug() << "Switching shader program id: " << mShaderProgram[2]->getProgram();
 
     setupPlainShader(0);
     setupTextureShader(1);
@@ -104,7 +106,23 @@ void RenderWindow::init()
     //testing triangle surface class
     temp = new TriangleSurface();
     temp->init();
+    temp->mMatrix.scale(gsl::Vector3D{1.3f, 1.3f, 1.3f});
     mVisualObjects.push_back(temp);
+
+    //testing triangle surface class
+    temp = new TriangleSurface();
+    temp->init();
+    temp->mMatrix.scale(gsl::Vector3D{4.f, 4.f, 1.f});
+    temp->mMatrix.translate(0.1f, 1.2f, -20.f);
+    mVisualObjects.push_back(temp);
+
+    //testing triangle surface class
+    temp = new TriangleSurface();
+    temp->init();
+    temp->mMatrix.scale(5.f, 5.f, 1.f);
+    temp->mMatrix.translate(0.5f, 0.8f, -50.f);
+    mVisualObjects.push_back(temp);
+
 
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
@@ -114,8 +132,13 @@ void RenderWindow::init()
 ///Called each frame - doing the rendering
 void RenderWindow::render()
 {
+    const float deltaTime = mTimeStart.nsecsElapsed() / 1000000000.f;
+
     //input
-    handleInput();
+    handleInput(deltaTime);
+
+//    // Update threshold
+//    updateThreshold(deltaTime, thresholdDir);
 
     mCurrentCamera->update();
 
@@ -133,12 +156,29 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
         mVisualObjects[0]->draw();
 
-        glUseProgram(mShaderProgram[1]->getProgram());
-        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
-        glUniform1i(mTextureUniform, 1);
+        glUseProgram(mShaderProgram[2]->getProgram());
+        glUniformMatrix4fv( mShaderProgram[2]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
+        glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "textureSampler"), 1);
+        glUniform2i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "windowSize"), width(), height());
+        glUniform1f(glGetUniformLocation(mShaderProgram[2]->getProgram(), "threshold"), threshold);
         mVisualObjects[1]->draw();
+
+//        glUseProgram(mShaderProgram[2]->getProgram());
+//        glUniformMatrix4fv( mShaderProgram[2]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+//        glUniformMatrix4fv( mShaderProgram[2]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "textureSampler"), 0);
+//        glUniform2i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "windowSize"), width(), height());
+//        glUniform1f(glGetUniformLocation(mShaderProgram[2]->getProgram(), "threshold"), threshold);
+        mVisualObjects[2]->draw();
+
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
+        glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "textureSampler"), 1);
+//        glUniform2i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "windowSize"), width(), height());
+//        glUniform1f(glGetUniformLocation(mShaderProgram[2]->getProgram(), "threshold"), threshold);
+        mVisualObjects[3]->draw();
     }
 
     //Calculate framerate before
@@ -293,7 +333,7 @@ void RenderWindow::setCameraSpeed(float value)
         mCameraSpeed = 0.3f;
 }
 
-void RenderWindow::handleInput()
+void RenderWindow::handleInput(float deltaTime)
 {
     //Camera
     mCurrentCamera->setSpeed(0.f);  //cancel last frame movement
@@ -312,6 +352,25 @@ void RenderWindow::handleInput()
         if(mInput.E)
             mCurrentCamera->updateHeigth(-mCameraSpeed);
     }
+
+    if (mInput.RIGHT)
+        threshold += deltaTime * thresholdSwitchSpeed;
+    if (mInput.LEFT)
+        threshold -= deltaTime * thresholdSwitchSpeed;
+
+    if (threshold > 1.f)
+        threshold = 1.f;
+    else if (threshold < 0.f)
+        threshold = 0.f;
+}
+
+void RenderWindow::updateThreshold(float deltaTime, float dir)
+{
+    threshold += deltaTime * dir;
+    if (threshold > 1.f)
+        threshold = 1.f;
+    else if (threshold < 0.f)
+        threshold = 0.f;
 }
 
 void RenderWindow::keyPressEvent(QKeyEvent *event)

@@ -55,5 +55,6 @@ FORMS += \
 DISTFILES += \
     plainfragment.frag \
     plainvertex.vert \
+    switchingShader.frag \
     texturefragmet.frag \
     texturevertex.vert

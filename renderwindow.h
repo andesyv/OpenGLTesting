@@ -47,6 +47,10 @@ private:
     Texture *mTexture[4]{nullptr}; //We can hold 4 textures
     Shader *mShaderProgram[4]{nullptr}; //We can hold 4 shaders
 
+    float threshold = 1.f;
+    float thresholdDir = 1.f;
+    float thresholdSwitchSpeed = 0.5f;
+
     void setupPlainShader(int shaderIndex);
     GLint mMatrixUniform0{-1};
     GLint vMatrixUniform0{-1};
@@ -83,7 +87,9 @@ private:
 
     void startOpenGLDebugger();
 
-    void handleInput();
+    void handleInput(float deltaTime = 0.f);
+
+    void updateThreshold(float deltaTime, float dir = 0.1f);
 
 protected:
     //The QWindow that we inherit from has these functions to capture
