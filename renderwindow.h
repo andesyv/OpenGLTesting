@@ -47,6 +47,9 @@ private:
     Texture *mTexture[4]{nullptr}; //We can hold 4 textures
     Shader *mShaderProgram[4]{nullptr}; //We can hold 4 shaders
 
+    // Id of the uniform data buffer that sends uniform global data to the shaders
+    GLuint globalDataBuffer;
+
     void setupPlainShader(int shaderIndex);
     GLint mMatrixUniform0{-1};
     GLint vMatrixUniform0{-1};

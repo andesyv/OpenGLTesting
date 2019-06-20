@@ -86,6 +86,18 @@ void RenderWindow::init()
     setupPlainShader(0);
     setupTextureShader(1);
 
+    //********************** Set up global shader data **************
+    glGenBuffers(GL_UNIFORM_BUFFER, &globalDataBuffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, globalDataBuffer);
+    // Reserve memory
+    glBufferData(GL_UNIFORM_BUFFER, 2 * /*sizeof(gsl::Matrix4x4)*/sizeof(float) * 16, NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    // Bind entire range of buffer to binding point 0
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, globalDataBuffer, 0, 2 * sizeof(gsl::Matrix4x4));
+
+
+
     //**********************  Texture stuff: **********************
     mTexture[0] = new Texture();
     mTexture[1] = new Texture("../GSOpenGL2019/Assets/hund.bmp");
