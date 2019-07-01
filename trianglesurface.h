@@ -16,6 +16,7 @@ public:
     void readFile(std::string filename);
     void writeFile(std::string filename);
     void construct();
+    void constructTorus();
 };
 
 #endif //TRIANGLESURFACE_H

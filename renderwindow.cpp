@@ -78,23 +78,28 @@ void RenderWindow::init()
     //NB: hardcoded path to files! You have to change this if you change directories for the project.
     //Qt makes a build-folder besides the project folder. That is why we go down one directory
     // (out of the build-folder) and then up into the project folder.
-    mShaderProgram[0] = new Shader("../GSOpenGL2019/plainvertex.vert", "../GSOpenGL2019/plainfragment.frag");
+    mShaderProgram[0] = new Shader("../OpenGLTesting/plainvertex.vert", "../OpenGLTesting/plainfragment.frag");
     qDebug() << "Plain shader program id: " << mShaderProgram[0]->getProgram();
-    mShaderProgram[1]= new Shader("../GSOpenGL2019/texturevertex.vert", "../GSOpenGL2019/texturefragmet.frag");
+    mShaderProgram[1]= new Shader("../OpenGLTesting/texturevertex.vert", "../OpenGLTesting/texturefragmet.frag");
     qDebug() << "Texture shader program id: " << mShaderProgram[1]->getProgram();
+    mShaderProgram[2]= new Shader("../OpenGLTesting/phong.vert", "../OpenGLTesting/phong.frag");
+    qDebug() << "Phong shader program id: " << mShaderProgram[2]->getProgram();
+
 
     setupPlainShader(0);
     setupTextureShader(1);
 
     //**********************  Texture stuff: **********************
     mTexture[0] = new Texture();
-    mTexture[1] = new Texture("../GSOpenGL2019/Assets/hund.bmp");
+    mTexture[1] = new Texture("../OpenGLTesting/Assets/hund.bmp");
+    mTexture[2] = new Texture("../OpenGLTesting/Assets/wood.bmp");
 
     //Set the textures loaded to a texture unit
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture[0]->id());
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
+    glActiveTexture(GL_TEXTURE0);
 
     //********************** Making the objects to be drawn **********************
     VisualObject *temp = new XYZ();
@@ -102,8 +107,23 @@ void RenderWindow::init()
     mVisualObjects.push_back(temp);
 
     //testing triangle surface class
+    temp = new TriangleSurface("../OpenGLTesting/Assets/cube.txt");
+    temp->init();
+    temp->mMatrix.translate(0.4f, 1.5f, 0.3f);
+    mVisualObjects.push_back(temp);
+
     temp = new TriangleSurface();
     temp->init();
+    temp->mMatrix.rotateX(90.f);
+    temp->mMatrix.scale(10.f);
+    temp->mMatrix.translate(-0.25f, -0.25f, 0.f);
+    mVisualObjects.push_back(temp);
+
+    temp = new TriangleSurface();
+    static_cast<TriangleSurface*>(temp)->constructTorus();
+    temp->init();
+    temp->mMatrix.scale(0.2f);
+    temp->mMatrix.translate(4.f, 1.5f, -2.f);
     mVisualObjects.push_back(temp);
 
     //********************** Set up camera **********************
@@ -127,18 +147,35 @@ void RenderWindow::render()
 
     //******** This should be done with a loop!
     {
-        glUseProgram(mShaderProgram[0]->getProgram());
-        glUniformMatrix4fv( vMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv( pMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
+        // Color shader:
+        mShaderProgram[0]->use();
+        glUniformMatrix4fv( mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+
+        // XYZ
+        glUniformMatrix4fv( mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
         mVisualObjects[0]->draw();
 
+        // Donut
+        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
+        mVisualObjects[3]->draw();
+
+        // Texture shader:
         glUseProgram(mShaderProgram[1]->getProgram());
-        glUniformMatrix4fv( vMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv( pMatrixUniform1, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
-        glUniform1i(mTextureUniform, 1);
+        glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+
+        // Box
+        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
+        glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
         mVisualObjects[1]->draw();
+
+        // Ground plane
+        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glBindTexture(GL_TEXTURE_2D, mTexture[2]->id());
+        mVisualObjects[2]->draw();
+
+
     }
 
     //Calculate framerate before

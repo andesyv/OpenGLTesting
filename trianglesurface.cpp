@@ -3,6 +3,7 @@
 #include "math_constants.h"
 #include <cmath>
 #include <QDebug>
+#include <algorithm>
 
 TriangleSurface::TriangleSurface() : VisualObject() {
     Vertex v{};
@@ -130,4 +131,44 @@ void TriangleSurface::construct()
             mVertices.push_back(Vertex{x+h,y+h,z,x,y,z});
         }
     }
+}
+
+void TriangleSurface::constructTorus()
+{
+    mVertices.clear();
+    mMatrix.setToIdentity();
+
+    const float innerRadius = 3.f;
+    const float ringRadius = 1.f;
+    const int ringAmount = 30;
+    const int ringCorners = 20;
+    const float angleDiff = 2.f * gsl::PI / ringCorners;
+    const float ringAngleDiff = 2.f * gsl::PI / ringAmount;
+    const float ringPercentage = 1.f;
+
+
+    for (unsigned int ring{0}; ring < ringAmount && static_cast<float>(ring) / ringAmount < ringPercentage; ring++) {
+        for (unsigned int i{0}; i < ringCorners; i++) {
+            unsigned int iPattern[6]{i, i + 1, i, i + 1, i + 1, i};
+            unsigned int ringPattern[6]{ring, ring, ring + 1, ring, ring + 1, ring + 1};
+
+            for (unsigned int k{0}; k < 6; k++) {
+                // First point
+                Vertex vert;
+
+                float x = std::cos(iPattern[k] * angleDiff) * ringRadius * std::sin(ringPattern[k] * ringAngleDiff)
+                        + std::sin(ringPattern[k] * ringAngleDiff) * innerRadius;
+                float y = std::sin(iPattern[k] * angleDiff) * ringRadius;
+                float z = std::cos(iPattern[k] * angleDiff) * ringRadius * std::cos(ringPattern[k] * ringAngleDiff)
+                        + std::cos(ringPattern[k] * ringAngleDiff) * innerRadius;
+
+                gsl::Vector3D xyz = {x, y, z};
+                gsl::Vector3D normal = {ringPattern[k] / static_cast<float>(ringAmount), 0.f, 0.f};
+                gsl::Vector2D uv = {0.f, 0.f};
+                mVertices.push_back({xyz, normal, uv});
+            }
+        }
+    }
+
+    std::reverse(mVertices.begin(), mVertices.end());
 }
