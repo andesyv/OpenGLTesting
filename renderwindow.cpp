@@ -147,31 +147,41 @@ void RenderWindow::render()
 
     //******** This should be done with a loop!
     {
-        // Color shader:
+        /// Vertex color shader:
         mShaderProgram[0]->use();
         glUniformMatrix4fv( mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-
         // XYZ
         glUniformMatrix4fv( mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
         mVisualObjects[0]->draw();
 
+        /// Phong shader:
+        mShaderProgram[2]->use();
+        glUniformMatrix4fv( mShaderProgram[2]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        // Adding a light (the sun) to the scene
+        gsl::Vector3D sun{-3.f, 5.f, 8.f};
+        glUniform3fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "lightPos"), 1, sun.xP());
+        // Sending viewPos
+        auto cameraPos = mCurrentCamera->position();
+        glUniform3fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "viewPos"), 1, cameraPos.xP());
+
         // Donut
-        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
         mVisualObjects[3]->draw();
 
-        // Texture shader:
-        glUseProgram(mShaderProgram[1]->getProgram());
-        glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-        glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+//        // Texture shader:
+//        glUseProgram(mShaderProgram[1]->getProgram());
+//        glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+//        glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
 
         // Box
-        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
         mVisualObjects[1]->draw();
 
         // Ground plane
-        glUniformMatrix4fv( mShaderProgram[1]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
         glBindTexture(GL_TEXTURE_2D, mTexture[2]->id());
         mVisualObjects[2]->draw();
 

@@ -15,7 +15,7 @@ out VS_OUT {
 } vs_out;
 
 void main() {
-    vs_out.normal = normalize(mat3(transpose(inverse(mMatrix))) * normIn);
+    vs_out.normal = mat3(transpose(inverse(mMatrix))) * normIn;
     vs_out.fragPos = vec3(mMatrix * vec4(posIn, 1));
     vs_out.uv = uvIn;
 

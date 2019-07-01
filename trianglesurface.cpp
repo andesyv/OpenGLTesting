@@ -7,15 +7,15 @@
 
 TriangleSurface::TriangleSurface() : VisualObject() {
     Vertex v{};
-    v.set_xyz(0,0,0); v.set_rgb(1,0,0); v.set_uv(0,0);
+    v.set_xyz(0,0,0); v.set_rgb(0,0,1); v.set_uv(0,0);
     mVertices.push_back(v);
-    v.set_xyz(0.5,0,0); v.set_rgb(0,1,0);  v.set_uv(1,0);
+    v.set_xyz(0.5,0,0); v.set_rgb(0,0,1);  v.set_uv(1,0);
     mVertices.push_back(v);
     v.set_xyz(0.5,0.5,0); v.set_rgb(0,0,1); v.set_uv(1,1);
     mVertices.push_back(v);
-    v.set_xyz(0,0,0); v.set_rgb(0,1,0); v.set_uv(0,0);
+    v.set_xyz(0,0,0); v.set_rgb(0,0,1); v.set_uv(0,0);
     mVertices.push_back(v);
-    v.set_xyz(0.5,0.5,0); v.set_rgb(1,0,0); v.set_uv(1,1);
+    v.set_xyz(0.5,0.5,0); v.set_rgb(0,0,1); v.set_uv(1,1);
     mVertices.push_back(v);
     v.set_xyz(0,0.5,0); v.set_rgb(0,0,1); v.set_uv(0,1);
     mVertices.push_back(v);
@@ -163,7 +163,9 @@ void TriangleSurface::constructTorus()
                         + std::cos(ringPattern[k] * ringAngleDiff) * innerRadius;
 
                 gsl::Vector3D xyz = {x, y, z};
-                gsl::Vector3D normal = {ringPattern[k] / static_cast<float>(ringAmount), 0.f, 0.f};
+                gsl::Vector3D ringCenter = {std::sin(ringPattern[k] * ringAngleDiff) * innerRadius, 0, std::cos(ringPattern[k] * ringAngleDiff) * innerRadius};
+                gsl::Vector3D normal = // {ringPattern[k] / static_cast<float>(ringAmount), 0.f, 0.f};
+                        (xyz - ringCenter).normalized();
                 gsl::Vector2D uv = {0.f, 0.f};
                 mVertices.push_back({xyz, normal, uv});
             }

@@ -14,16 +14,17 @@ vec3 objectColor = vec3(1, 0, 0);
 out vec4 fragColor;
 
 void main() {
+    vec3 norm = normalize(fs_in.normal);
     // Ambient
     vec3 ambient = lightColor * 0.15;
 
     // Diffuse
     vec3 lightDir = normalize(lightPos - fs_in.fragPos);
-    vec3 diffuse = lightColor * max(dot(fs_in.normal, lightDir), 0) * 0.8;
+    vec3 diffuse = lightColor * max(dot(norm, lightDir), 0) * 0.8;
 
     // Specular
-    vec3 viewDir = normalize(viewPos - fs_in.fragPos);
-    vec3 reflectDir = reflect(-lightDir, fs_in.normal);
+    vec3 viewDir = normalize(fs_in.fragPos - viewPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
     vec3 specular = lightColor * pow(max(dot(viewDir, reflectDir), 0.0), 16) * 0.4;
 
     fragColor = vec4((ambient + diffuse + specular) * objectColor, 1);
