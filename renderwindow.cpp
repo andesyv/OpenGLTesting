@@ -121,19 +121,21 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
-    //testing triangle surface class
+    // Cube
     temp = new TriangleSurface("../OpenGLTesting/Assets/cube.txt");
     temp->init();
-    temp->mMatrix.translate(0.4f, 1.5f, 0.3f);
+    temp->mMatrix.translate(-0.8f, 0.4f, 1.2f);
     mVisualObjects.push_back(temp);
 
+    // Ground
     temp = new TriangleSurface();
     temp->init();
     temp->mMatrix.rotateX(90.f);
-    temp->mMatrix.scale(10.f);
+    temp->mMatrix.scale(50.f);
     temp->mMatrix.translate(-0.25f, -0.25f, 0.f);
     mVisualObjects.push_back(temp);
 
+    // Donut
     temp = new TriangleSurface();
     static_cast<TriangleSurface*>(temp)->constructTorus();
     temp->init();
@@ -172,8 +174,10 @@ void RenderWindow::init()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.f, 1.f, 1.f, 1.f}; // Pure white
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     // Add texture to framebuffer and complete creation of framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
@@ -222,6 +226,7 @@ void RenderWindow::render()
         glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_FRONT);
 
 //        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
 //        mVisualObjects[0]->draw();
@@ -238,6 +243,7 @@ void RenderWindow::render()
         glViewport(0, 0, width(), height());
         //to clear the screen for each redraw
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_BACK);
 
         /// Vertex color shader:
         mShaderProgram[0]->use();

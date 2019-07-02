@@ -22,11 +22,14 @@ float calculateShadow(vec4 lightScreenSpaceFragPos, vec3 normal, vec3 lightDir) 
     // Convert from range [-1, 1] to range [0, 1]
     projCoord = projCoord * 0.5 + 0.5;
 
-    float closestDepth = texture(shadowMap, projCoord.xy).r;
     float currentDepth = projCoord.z;
+    if (currentDepth > 1.0)
+        return 0.0;
+
+    float closestDepth = texture(shadowMap, projCoord.xy).r;
 
     // Add in a bias to fix shadow acne
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
 
     return float(currentDepth - bias > closestDepth);
 }
