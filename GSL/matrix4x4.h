@@ -50,6 +50,7 @@ public:
     void perspective(GLfloat fieldOfView, GLfloat aspectRatio, GLfloat nearPlane, GLfloat farPlane);
 
     void lookAt(const Vector3D &eye, const Vector3D &center, const Vector3D &up_axis);
+    static Matrix4x4 lookAtRotation(const Vector3D &eye, const Vector3D &center, const Vector3D &up_axis);
 
     void setRotationToVector(const Vector3D &direction, Vector3D up = Vector3D(0.f,1.f,0.f));
 

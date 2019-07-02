@@ -320,10 +320,11 @@ void Matrix4x4::ortho(GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat nearPl
     *this =
     {
         2.f/(r-l), 0.f, 0.f, 0.f,
-                0.f, 2.f/(t-b), 0.f, 0.f,
-                0.f, 0.f, -2.f/(farPlane-nearPlane), 0.f,
-                -(r+l)/(r-l), -(t+b)/(t-b), -(farPlane+nearPlane)/(farPlane-nearPlane), 1.f
+        0.f, 2.f/(t-b), 0.f, 0.f,
+        0.f, 0.f, -2.f/(farPlane-nearPlane), 0.f,
+        -(r+l)/(r-l), -(t+b)/(t-b), -(farPlane+nearPlane)/(farPlane-nearPlane), 1.f
     };
+    transpose();
 }
 
 //From Interactive Computer Graphics ch. 5
@@ -404,6 +405,22 @@ void Matrix4x4::lookAt(const Vector3D &eye, const Vector3D &center, const Vector
                 u.getX(),  u.getY(),  u.getZ(), -Vector3D::dot(u, eye),
                 -f.getX(), -f.getY(), -f.getZ(), Vector3D::dot(f, eye),
                 0.f, 0.f, 0.f, 1.f
+    };
+}
+
+Matrix4x4 Matrix4x4::lookAtRotation(const Vector3D &eye, const Vector3D &center, const Vector3D &up_axis)
+{
+    Vector3D f = eye-center;    //forward
+    f.normalize();
+    Vector3D s = Vector3D::cross(f, up_axis);   //sideways
+    s.normalize();
+    Vector3D u = Vector3D::cross(s, f);     //up
+
+    return {
+        s.getX(),  s.getY(),  s.getZ(), 0.f,
+        u.getX(),  u.getY(),  u.getZ(), 0.f,
+        f.getX(), f.getY(), f.getZ(), 0.f,
+        0.f, 0.f, 0.f, 1.f
     };
 }
 

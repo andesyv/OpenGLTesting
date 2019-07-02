@@ -15,6 +15,17 @@
 #include "xyz.h"
 #include "trianglesurface.h"
 
+const float quadVertices[] = {
+    // xyz          // uvs
+    1.f, 1.f,       1.f, 1.f,
+    -1.f, 1.f,      0.f, 1.f,
+    -1.f, -1.f,     0.f, 0.f,
+
+    -1.f, -1.f,     0.f, 0.f,
+    1.f, -1.f,      1.f, 0.f,
+    1.f, 1.f,       1.f, 1.f
+};
+
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow)
 {
@@ -80,10 +91,14 @@ void RenderWindow::init()
     // (out of the build-folder) and then up into the project folder.
     mShaderProgram[0] = new Shader("../OpenGLTesting/plainvertex.vert", "../OpenGLTesting/plainfragment.frag");
     qDebug() << "Plain shader program id: " << mShaderProgram[0]->getProgram();
-    mShaderProgram[1]= new Shader("../OpenGLTesting/texturevertex.vert", "../OpenGLTesting/texturefragmet.frag");
+    mShaderProgram[1] = new Shader("../OpenGLTesting/texturevertex.vert", "../OpenGLTesting/texturefragmet.frag");
     qDebug() << "Texture shader program id: " << mShaderProgram[1]->getProgram();
-    mShaderProgram[2]= new Shader("../OpenGLTesting/phong.vert", "../OpenGLTesting/phong.frag");
+    mShaderProgram[2] = new Shader("../OpenGLTesting/phong.vert", "../OpenGLTesting/phong.frag");
     qDebug() << "Phong shader program id: " << mShaderProgram[2]->getProgram();
+    mShaderProgram[3] = new Shader("../OpenGLTesting/depth.vert", "../OpenGLTesting/depth.frag");
+    qDebug() << "Depth shader program id: " << mShaderProgram[3]->getProgram();
+    mShaderProgram[4] = new Shader("../OpenGLTesting/postprocess.vert", "../OpenGLTesting/depthVisualize.frag");
+    qDebug() << "Postprocess shader program id: " << mShaderProgram[3]->getProgram();
 
 
     setupPlainShader(0);
@@ -129,6 +144,50 @@ void RenderWindow::init()
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
     mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, -2.f));
+
+    // Make a plane that covers the screen
+    glGenVertexArrays(1, &screenPlaneVAO);
+    glBindVertexArray(screenPlaneVAO);
+
+    GLuint screenPlaneVBO;
+    glGenBuffers(1, &screenPlaneVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, screenPlaneVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2,  GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)( 2 * sizeof(GLfloat)) );
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    //********************** Set up shadows *********************
+    // Make framebuffer for depthmap (from light perspective)
+    glGenFramebuffers(1, &shadowFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+
+    // Create a texture to save the depthmap
+    glGenTextures(1, &shadowMap);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Add texture to framebuffer and complete creation of framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Creation of shadow framebuffer failed!" << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
 }
 
 ///Called each frame - doing the rendering
@@ -142,11 +201,42 @@ void RenderWindow::render()
     mTimeStart.restart(); //restart FPS clock
     mContext->makeCurrent(this); //must be called every frame (every time mContext->swapBuffers is called)
 
-    //to clear the screen for each redraw
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gsl::Vector3D sun{-1.7f, 3.f, 2.9f};
 
     //******** This should be done with a loop!
     {
+        // *****************  Render to depthmap for shadows ********************
+        glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        gsl::Matrix4x4 lightView; //= gsl::Matrix4x4::lookAtRotation(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
+        lightView.lookAt(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
+        // lightView.transpose();
+        gsl::Matrix4x4 lightProjection;
+        lightProjection.ortho(-5.f, 5.f, -5.f, 5.f, 1.f, 7.f);
+
+        auto lightViewProjMatrix = lightProjection * lightView;
+
+        mShaderProgram[3]->use();
+        glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), "lightViewProjMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
+
+        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
+        mVisualObjects[0]->draw();
+        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
+        mVisualObjects[1]->draw();
+        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        mVisualObjects[2]->draw();
+        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
+        mVisualObjects[3]->draw();
+
+
+        // ******************** Render scene normally ************************
+        glViewport(0, 0, width(), height());
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        //to clear the screen for each redraw
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         /// Vertex color shader:
         mShaderProgram[0]->use();
         glUniformMatrix4fv( mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
@@ -160,7 +250,6 @@ void RenderWindow::render()
         glUniformMatrix4fv( mShaderProgram[2]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( mShaderProgram[2]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
         // Adding a light (the sun) to the scene
-        gsl::Vector3D sun{-3.f, 5.f, 8.f};
         glUniform3fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "lightPos"), 1, sun.xP());
         // Sending viewPos
         auto cameraPos = mCurrentCamera->position();
@@ -170,22 +259,26 @@ void RenderWindow::render()
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
         mVisualObjects[3]->draw();
 
-//        // Texture shader:
-//        glUseProgram(mShaderProgram[1]->getProgram());
-//        glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
-//        glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-
         // Box
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
-        glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
+        // glBindTexture(GL_TEXTURE_2D, shadowMap);
         mVisualObjects[1]->draw();
 
         // Ground plane
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
-        glBindTexture(GL_TEXTURE_2D, mTexture[2]->id());
+        // glBindTexture(GL_TEXTURE_2D, mTexture[2]->id());
         mVisualObjects[2]->draw();
 
+        /// Texture shader:
+        glUseProgram(mShaderProgram[1]->getProgram());
+        glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
 
+        // Draw a triangle over the screen
+        mShaderProgram[4]->use();
+        glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glBindVertexArray(screenPlaneVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
     //Calculate framerate before
