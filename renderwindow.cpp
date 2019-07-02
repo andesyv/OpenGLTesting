@@ -98,7 +98,7 @@ void RenderWindow::init()
     mShaderProgram[3] = new Shader("../OpenGLTesting/depth.vert", "../OpenGLTesting/depth.frag");
     qDebug() << "Depth shader program id: " << mShaderProgram[3]->getProgram();
     mShaderProgram[4] = new Shader("../OpenGLTesting/postprocess.vert", "../OpenGLTesting/depthVisualize.frag");
-    qDebug() << "Postprocess shader program id: " << mShaderProgram[3]->getProgram();
+    qDebug() << "Postprocess shader program id: " << mShaderProgram[4]->getProgram();
 
 
     setupPlainShader(0);
@@ -239,7 +239,6 @@ void RenderWindow::render()
         //to clear the screen for each redraw
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /*
         /// Vertex color shader:
         mShaderProgram[0]->use();
         glUniformMatrix4fv( mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
@@ -260,6 +259,12 @@ void RenderWindow::render()
 
         glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "lightScreenSpaceMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
 
+        // Add the shadow map to the 7th texture slot
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "shadowMap"), 7);
+        glActiveTexture(GL_TEXTURE0);
+
         // Donut
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
         mVisualObjects[3]->draw();
@@ -278,14 +283,13 @@ void RenderWindow::render()
         glUseProgram(mShaderProgram[1]->getProgram());
         glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
-        */
 
-        // Draw a triangle over the screen
-        mShaderProgram[4]->use();
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
-        glUniform1i(glGetUniformLocation(mShaderProgram[4]->getProgram(), "depthMap"), 0);
-        glBindVertexArray(screenPlaneVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+//        // Draw a triangle over the screen
+//        mShaderProgram[4]->use();
+//        glBindTexture(GL_TEXTURE_2D, shadowMap);
+//        glUniform1i(glGetUniformLocation(mShaderProgram[4]->getProgram(), "depthMap"), 0);
+//        glBindVertexArray(screenPlaneVAO);
+//        glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
     //Calculate framerate before
