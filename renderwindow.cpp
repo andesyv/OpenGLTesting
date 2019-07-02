@@ -214,7 +214,8 @@ void RenderWindow::render()
         lightView.lookAt(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
         // lightView.transpose();
         gsl::Matrix4x4 lightProjection;
-        lightProjection.ortho(-5.f, 5.f, -5.f, 5.f, 1.f, 7.f);
+        // lightProjection.ortho(-5.f, 5.f, -5.f, 5.f, 1.f, 7.f);
+        lightProjection.perspective(45.f, mAspectratio, 0.1f, 100.f);
 
         auto lightViewProjMatrix = lightProjection * lightView;
         // std::cout << "lightviewprojmatrix: " << lightViewProjMatrix << std::endl;
