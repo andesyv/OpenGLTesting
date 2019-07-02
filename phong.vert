@@ -7,6 +7,7 @@ layout (location = 2) in vec2 uvIn;
 uniform mat4 mMatrix;
 uniform mat4 vMatrix;
 uniform mat4 pMatrix;
+uniform mat4 lightScreenSpaceMatrix;
 
 out VS_OUT {
     vec3 fragPos;

@@ -165,7 +165,6 @@ void RenderWindow::init()
     //********************** Set up shadows *********************
     // Make framebuffer for depthmap (from light perspective)
     glGenFramebuffers(1, &shadowFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 
     // Create a texture to save the depthmap
     glGenTextures(1, &shadowMap);
@@ -177,6 +176,7 @@ void RenderWindow::init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Add texture to framebuffer and complete creation of framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
@@ -206,10 +206,6 @@ void RenderWindow::render()
     //******** This should be done with a loop!
     {
         // *****************  Render to depthmap for shadows ********************
-        glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
         gsl::Matrix4x4 lightView; //= gsl::Matrix4x4::lookAtRotation(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
         lightView.lookAt(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
         // lightView.transpose();
@@ -217,12 +213,18 @@ void RenderWindow::render()
         lightProjection.ortho(-5.f, 5.f, -5.f, 5.f, 1.f, 7.f);
 
         auto lightViewProjMatrix = lightProjection * lightView;
+        // std::cout << "lightviewprojmatrix: " << lightViewProjMatrix << std::endl;
 
         mShaderProgram[3]->use();
+        glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
         glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), "lightViewProjMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
 
-        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
-        mVisualObjects[0]->draw();
+        glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+//        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
+//        mVisualObjects[0]->draw();
         glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         mVisualObjects[1]->draw();
         glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
@@ -232,11 +234,12 @@ void RenderWindow::render()
 
 
         // ******************** Render scene normally ************************
-        glViewport(0, 0, width(), height());
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, width(), height());
         //to clear the screen for each redraw
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        /*
         /// Vertex color shader:
         mShaderProgram[0]->use();
         glUniformMatrix4fv( mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
@@ -254,6 +257,8 @@ void RenderWindow::render()
         // Sending viewPos
         auto cameraPos = mCurrentCamera->position();
         glUniform3fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "viewPos"), 1, cameraPos.xP());
+
+        glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "lightScreenSpaceMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
 
         // Donut
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
@@ -273,10 +278,12 @@ void RenderWindow::render()
         glUseProgram(mShaderProgram[1]->getProgram());
         glUniformMatrix4fv( mShaderProgram[1]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
         glUniformMatrix4fv( mShaderProgram[1]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        */
 
         // Draw a triangle over the screen
         mShaderProgram[4]->use();
         glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glUniform1i(glGetUniformLocation(mShaderProgram[4]->getProgram(), "depthMap"), 0);
         glBindVertexArray(screenPlaneVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
