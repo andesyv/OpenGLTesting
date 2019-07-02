@@ -168,20 +168,33 @@ void RenderWindow::init()
     // Make framebuffer for depthmap (from light perspective)
     glGenFramebuffers(1, &shadowFBO);
 
-    // Create a texture to save the depthmap
+//    // Create a texture to save the depthmap
+//    glGenTextures(1, &shadowMap);
+//    glBindTexture(GL_TEXTURE_2D, shadowMap);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+//    float borderColor[] = {1.f, 1.f, 1.f, 1.f}; // Pure white
+//    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
     glGenTextures(1, &shadowMap);
-    glBindTexture(GL_TEXTURE_2D, shadowMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = {1.f, 1.f, 1.f, 1.f}; // Pure white
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
+    for (unsigned int i = 0; i < 6; i++)
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
+                     SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     // Add texture to framebuffer and complete creation of framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowMap, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
@@ -210,19 +223,37 @@ void RenderWindow::render()
     //******** This should be done with a loop!
     {
         // *****************  Render to depthmap for shadows ********************
-        gsl::Matrix4x4 lightView; //= gsl::Matrix4x4::lookAtRotation(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
-        lightView.lookAt(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
-        // lightView.transpose();
         gsl::Matrix4x4 lightProjection;
-        // lightProjection.ortho(-5.f, 5.f, -5.f, 5.f, 1.f, 7.f);
-        lightProjection.perspective(45.f, mAspectratio, 0.1f, 100.f);
+        // Perspective projection matrix must use a FOV of 90 degrees to be the same as a side of a cube.
+        lightProjection.perspective(90.f, mAspectratio, 0.1f, 100.f);
+        // mCurrentCamera->mProjectionMatrix = lightProjection;
 
-        auto lightViewProjMatrix = lightProjection * lightView;
+        // Create different light-space matrises for each side of the cubemap.
+        std::vector<gsl::Matrix4x4> lightViewProjMatrises;
+        lightViewProjMatrises.reserve(6);
+        gsl::Matrix4x4 temp; //= gsl::Matrix4x4::lookAtRotation(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
+
+        temp.lookAt(sun, sun + gsl::Vector3D{1, 0, 0}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
+        temp.lookAt(sun, sun + gsl::Vector3D{-1, 0, 0}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 1, 0}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
+        temp.lookAt(sun, sun + gsl::Vector3D{0, -1, 0}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, 1}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, -1}, gsl::Vector3D{0, 1, 0});
+        lightViewProjMatrises.push_back(lightProjection * temp);
         // std::cout << "lightviewprojmatrix: " << lightViewProjMatrix << std::endl;
 
         mShaderProgram[3]->use();
         glBindTexture(GL_TEXTURE_2D, mTexture[1]->id());
-        glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), "lightViewProjMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
+        for (unsigned int i{0}; i < 6; ++i) {
+            std::stringstream uniformName;
+            uniformName << "lightViewProjMatrix[" << i << ']';
+            glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), uniformName.str().c_str()), 1, GL_TRUE, lightViewProjMatrises.at(i).constData());
+        }
 
         glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
@@ -264,11 +295,9 @@ void RenderWindow::render()
         auto cameraPos = mCurrentCamera->position();
         glUniform3fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "viewPos"), 1, cameraPos.xP());
 
-        glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[2]->getProgram(), "lightScreenSpaceMatrix"), 1, GL_TRUE, lightViewProjMatrix.constData());
-
         // Add the shadow map to the 7th texture slot
         glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, shadowMap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
         glUniform1i(glGetUniformLocation(mShaderProgram[2]->getProgram(), "shadowMap"), 7);
         glActiveTexture(GL_TEXTURE0);
 
