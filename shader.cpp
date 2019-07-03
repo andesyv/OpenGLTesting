@@ -42,7 +42,6 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath, const GLcha
     std::string geometryCode;
     if (geometryPath)
     {
-        std::string geometryCode;
         std::ifstream gShaderFile;
         // Open files and check for errors
         gShaderFile.open( geometryPath );

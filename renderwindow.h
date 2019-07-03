@@ -47,10 +47,11 @@ private:
     GLuint screenPlaneVAO;
 
     Texture *mTexture[4]{nullptr}; //We can hold 4 textures
-    Shader *mShaderProgram[5]{nullptr}; //We can hold 4 shaders
+    Shader *mShaderProgram[6]{nullptr}; //We can hold 4 shaders
     const unsigned int SHADOWMAP_WIDTH = 1024, SHADOWMAP_HEIGHT = 1024;
     GLuint shadowFBO;
     GLuint shadowMap;
+    GLuint skyboxVAO;
 
     void setupPlainShader(int shaderIndex);
     GLint mMatrixUniform0{-1};

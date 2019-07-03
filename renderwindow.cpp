@@ -26,6 +26,51 @@ const float quadVertices[] = {
     1.f, 1.f,       1.f, 1.f
 };
 
+float skyboxVertices[] = {
+    // positions
+    -1.0f,  1.0f, -1.0f,
+    -1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f, -1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+
+    -1.0f, -1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f,
+    -1.0f, -1.0f,  1.0f,
+
+    -1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f, -1.0f,
+     1.0f,  1.0f,  1.0f,
+     1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f,  1.0f,
+    -1.0f,  1.0f, -1.0f,
+
+    -1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f, -1.0f,
+     1.0f, -1.0f, -1.0f,
+    -1.0f, -1.0f,  1.0f,
+     1.0f, -1.0f,  1.0f
+};
+
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow)
 {
@@ -95,10 +140,12 @@ void RenderWindow::init()
     qDebug() << "Texture shader program id: " << mShaderProgram[1]->getProgram();
     mShaderProgram[2] = new Shader("../OpenGLTesting/phong.vert", "../OpenGLTesting/phong.frag");
     qDebug() << "Phong shader program id: " << mShaderProgram[2]->getProgram();
-    mShaderProgram[3] = new Shader("../OpenGLTesting/depth.vert", "../OpenGLTesting/depth.frag");
+    mShaderProgram[3] = new Shader("../OpenGLTesting/depth.vert", "../OpenGLTesting/depth.frag", "../OpenGLTesting/depth.geom");
     qDebug() << "Depth shader program id: " << mShaderProgram[3]->getProgram();
     mShaderProgram[4] = new Shader("../OpenGLTesting/postprocess.vert", "../OpenGLTesting/depthVisualize.frag");
     qDebug() << "Postprocess shader program id: " << mShaderProgram[4]->getProgram();
+    mShaderProgram[5] = new Shader("../OpenGLTesting/skybox.vert", "../OpenGLTesting/skybox.frag");
+    qDebug() << "Skybox shader program id: " << mShaderProgram[5]->getProgram();
 
 
     setupPlainShader(0);
@@ -203,8 +250,24 @@ void RenderWindow::init()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    //******************** Create a skybox *************************
+    //Vertex Array Object - VAO
+    glGenVertexArrays(1, &skyboxVAO);
+    glBindVertexArray(skyboxVAO);
 
+    //Vertex Buffer Object to hold vertices - VBO
+    unsigned int skyboxVBO;
+    glGenBuffers( 1, &skyboxVBO );
+    glBindBuffer( GL_ARRAY_BUFFER, skyboxVBO );
 
+    glBufferData( GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW );
+
+    // 1st attribute buffer : vertex positions
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT,GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
 ///Called each frame - doing the rendering
@@ -218,7 +281,8 @@ void RenderWindow::render()
     mTimeStart.restart(); //restart FPS clock
     mContext->makeCurrent(this); //must be called every frame (every time mContext->swapBuffers is called)
 
-    gsl::Vector3D sun{-1.7f, 3.f, 2.9f};
+    gsl::Vector3D sun{-2.5f, 4.f, 4.f};
+    glDepthFunc(GL_LESS);
 
     //******** This should be done with a loop!
     {
@@ -226,24 +290,24 @@ void RenderWindow::render()
         gsl::Matrix4x4 lightProjection;
         // Perspective projection matrix must use a FOV of 90 degrees to be the same as a side of a cube.
         lightProjection.perspective(90.f, mAspectratio, 0.1f, 100.f);
-        // mCurrentCamera->mProjectionMatrix = lightProjection;
+        mCurrentCamera->mProjectionMatrix = lightProjection;
 
         // Create different light-space matrises for each side of the cubemap.
         std::vector<gsl::Matrix4x4> lightViewProjMatrises;
         lightViewProjMatrises.reserve(6);
         gsl::Matrix4x4 temp; //= gsl::Matrix4x4::lookAtRotation(sun, gsl::Vector3D{0, 0, 0}, gsl::Vector3D{0, 1, 0});
 
-        temp.lookAt(sun, sun + gsl::Vector3D{1, 0, 0}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{1, 0, 0}, gsl::Vector3D{0, -1, 0});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{-1, 0, 0}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{-1, 0, 0}, gsl::Vector3D{0, -1, 0});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, 1, 0}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 1, 0}, gsl::Vector3D{0, 0, 1});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, -1, 0}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{0, -1, 0}, gsl::Vector3D{0, 0, -1});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, 1}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, 1}, gsl::Vector3D{0, -1, 0});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, -1}, gsl::Vector3D{0, 1, 0});
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, -1}, gsl::Vector3D{0, -1, 0});/*mCurrentCamera->mViewMatrix = temp;*/
         lightViewProjMatrises.push_back(lightProjection * temp);
         // std::cout << "lightviewprojmatrix: " << lightViewProjMatrix << std::endl;
 
@@ -254,11 +318,13 @@ void RenderWindow::render()
             uniformName << "lightViewProjMatrix[" << i << ']';
             glUniformMatrix4fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), uniformName.str().c_str()), 1, GL_TRUE, lightViewProjMatrises.at(i).constData());
         }
+        glUniform3fv(glGetUniformLocation(mShaderProgram[3]->getProgram(), "lightPos"), 1, sun.xP());
+        glUniform1f(glGetUniformLocation(mShaderProgram[3]->getProgram(), "far_plane"), 100.f);
 
         glViewport(0, 0, SHADOWMAP_WIDTH, SHADOWMAP_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glCullFace(GL_FRONT);
+        // glCullFace(GL_FRONT);
 
 //        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[0]->mMatrix.constData());
 //        mVisualObjects[0]->draw();
@@ -275,7 +341,7 @@ void RenderWindow::render()
         glViewport(0, 0, width(), height());
         //to clear the screen for each redraw
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glCullFace(GL_BACK);
+        // glCullFace(GL_BACK);
 
         /// Vertex color shader:
         mShaderProgram[0]->use();
@@ -326,6 +392,15 @@ void RenderWindow::render()
 //        glUniform1i(glGetUniformLocation(mShaderProgram[4]->getProgram(), "depthMap"), 0);
 //        glBindVertexArray(screenPlaneVAO);
 //        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // Skybox
+        glDepthFunc(GL_LEQUAL);
+        glBindVertexArray(skyboxVAO);
+        mShaderProgram[5]->use();
+        glUniformMatrix4fv( mShaderProgram[5]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( mShaderProgram[5]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glBindTexture(GL_TEXTURE_CUBE_MAP, shadowMap);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     //Calculate framerate before

@@ -25,7 +25,8 @@ float calculateShadow(vec3 fragPos, vec3 normal, vec3 lightDir) {
     float currentDepth = length(fragToLight);
 
     // Add in a bias to fix shadow acne
-    float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
+    float bias = // max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
+    0.05;
 
     // // PCF (Percentage-closer filtering)
     // float shadow = 0.0;
@@ -38,7 +39,7 @@ float calculateShadow(vec3 fragPos, vec3 normal, vec3 lightDir) {
     // }
     // shadow /= 9.0;
 
-    float shadow = currentDepth - bias < closestDepth ? 1.0 : 0.0;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
 }
@@ -58,8 +59,8 @@ void main() {
     vec3 specular = lightColor * pow(max(dot(viewDir, reflectDir), 0.0), 16) * 0.4;
 
     // Shadows
-    float shadowMult = 1.0// - calculateShadow(fs_in.fragPos, norm, lightDir);
-    ;
+    float shadowMult = 1.0 - calculateShadow(fs_in.fragPos, norm, lightDir);
+
 
     fragColor = vec4((ambient + shadowMult * (diffuse + specular)) * objectColor, 1);
 
