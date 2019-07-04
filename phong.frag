@@ -19,27 +19,33 @@ out vec4 fragColor;
 
 float calculateShadow(vec3 fragPos, vec3 normal, vec3 lightDir) {
     vec3 fragToLight = fragPos - lightPos;
-    float closestDepth = texture(shadowMap, fragToLight).r;
-    closestDepth *= far_plane;
 
     float currentDepth = length(fragToLight);
 
     // Add in a bias to fix shadow acne
-    float bias = // max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
-    0.05;
+    float bias = // max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005); // Uncomment this for a very interesting effect...
+    0.15;
 
-    // // PCF (Percentage-closer filtering)
-    // float shadow = 0.0;
-    // vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    // for (int x = -1; x <= 1; ++x) {
-    //     for (int y = -1; y <= 1; ++y) {
-    //         float pcfDepth = texture(shadowMap, projCoord.xy + vec2(x, y) * texelSize).r;
-    //         shadow += float(currentDepth - bias > pcfDepth);
-    //     }
-    // }
-    // shadow /= 9.0;
+    // PCF (Percentage-closer filtering)
+    float shadow = 0.0;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskradius = (1.0 + (viewDistance / far_plane)) / 50.0;
+    vec3 sampleOffsetDirections[20] = vec3[]
+    (
+       vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
+       vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+       vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+       vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+       vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+    );
 
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    for (int i = 0; i < samples; ++i) {
+        float pcfDepth = texture(shadowMap, fragToLight + sampleOffsetDirections[i] * diskradius).r;
+        pcfDepth *= far_plane;
+        shadow += float(currentDepth - bias > pcfDepth);
+    }
+    shadow /= float(samples);
 
     return shadow;
 }
