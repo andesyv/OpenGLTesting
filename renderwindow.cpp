@@ -164,17 +164,18 @@ void RenderWindow::init()
     glActiveTexture(GL_TEXTURE0);
 
     //********************** Making the objects to be drawn **********************
+    // 0
     VisualObject *temp = new XYZ();
     temp->init();
     mVisualObjects.push_back(temp);
 
-    // Cube
+    // Cube (1)
     temp = new TriangleSurface("../OpenGLTesting/Assets/cube.txt");
     temp->init();
     temp->mMatrix.translate(-0.8f, 0.4f, 1.2f);
     mVisualObjects.push_back(temp);
 
-    // Ground
+    // Ground (2)
     temp = new TriangleSurface();
     temp->init();
     temp->mMatrix.rotateX(90.f);
@@ -182,12 +183,18 @@ void RenderWindow::init()
     temp->mMatrix.translate(-0.25f, -0.25f, 0.f);
     mVisualObjects.push_back(temp);
 
-    // Donut
+    // Donut (3)
     temp = new TriangleSurface();
     static_cast<TriangleSurface*>(temp)->constructTorus();
     temp->init();
     temp->mMatrix.scale(0.2f);
     temp->mMatrix.translate(4.f, 1.5f, -2.f);
+    mVisualObjects.push_back(temp);
+
+    // Cube (4)
+    temp = new TriangleSurface("../OpenGLTesting/Assets/cube.txt");
+    temp->init();
+    temp->mMatrix.translate(-4.f, 0.4f, 8.f);
     mVisualObjects.push_back(temp);
 
     //********************** Set up camera **********************
@@ -275,13 +282,13 @@ void RenderWindow::render()
 {
     //input
     handleInput();
-
+    static float totalElapsedTime{0};
     mCurrentCamera->update();
-
+    totalElapsedTime += mTimeStart.nsecsElapsed() / 1000000000.f;
     mTimeStart.restart(); //restart FPS clock
     mContext->makeCurrent(this); //must be called every frame (every time mContext->swapBuffers is called)
 
-    gsl::Vector3D sun{-2.5f, 4.f, 4.f};
+    gsl::Vector3D sun{-2.5f + static_cast<float>(std::sin(totalElapsedTime) * 6.f), 4.f, 4.f};
     glDepthFunc(GL_LESS);
 
     //******** This should be done with a loop!
@@ -289,8 +296,8 @@ void RenderWindow::render()
         // *****************  Render to depthmap for shadows ********************
         gsl::Matrix4x4 lightProjection;
         // Perspective projection matrix must use a FOV of 90 degrees to be the same as a side of a cube.
-        lightProjection.perspective(90.f, mAspectratio, 0.1f, 100.f);
-        mCurrentCamera->mProjectionMatrix = lightProjection;
+        lightProjection.perspective(90.f, static_cast<float>(SHADOWMAP_WIDTH) / SHADOWMAP_HEIGHT, 0.1f, 100.f);
+        // mCurrentCamera->mProjectionMatrix = lightProjection;
 
         // Create different light-space matrises for each side of the cubemap.
         std::vector<gsl::Matrix4x4> lightViewProjMatrises;
@@ -303,11 +310,11 @@ void RenderWindow::render()
         lightViewProjMatrises.push_back(lightProjection * temp);
         temp.lookAt(sun, sun + gsl::Vector3D{0, 1, 0}, gsl::Vector3D{0, 0, 1});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, -1, 0}, gsl::Vector3D{0, 0, -1});
+        temp.lookAt(sun, sun + gsl::Vector3D{0, -1, 0}, gsl::Vector3D{0, 0, -1});/*mCurrentCamera->mViewMatrix = temp;*/
         lightViewProjMatrises.push_back(lightProjection * temp);
         temp.lookAt(sun, sun + gsl::Vector3D{0, 0, 1}, gsl::Vector3D{0, -1, 0});
         lightViewProjMatrises.push_back(lightProjection * temp);
-        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, -1}, gsl::Vector3D{0, -1, 0});/*mCurrentCamera->mViewMatrix = temp;*/
+        temp.lookAt(sun, sun + gsl::Vector3D{0, 0, -1}, gsl::Vector3D{0, -1, 0});
         lightViewProjMatrises.push_back(lightProjection * temp);
         // std::cout << "lightviewprojmatrix: " << lightViewProjMatrix << std::endl;
 
@@ -330,10 +337,12 @@ void RenderWindow::render()
 //        mVisualObjects[0]->draw();
         glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         mVisualObjects[1]->draw();
-        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
-        mVisualObjects[2]->draw();
+//        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+//        mVisualObjects[2]->draw();
         glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[3]->mMatrix.constData());
         mVisualObjects[3]->draw();
+        glUniformMatrix4fv(mShaderProgram[3]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[4]->mMatrix.constData());
+        mVisualObjects[4]->draw();
 
 
         // ******************** Render scene normally ************************
@@ -375,6 +384,9 @@ void RenderWindow::render()
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         // glBindTexture(GL_TEXTURE_2D, shadowMap);
         mVisualObjects[1]->draw();
+
+        glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[4]->mMatrix.constData());
+        mVisualObjects[4]->draw();
 
         // Ground plane
         glUniformMatrix4fv( mShaderProgram[2]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
