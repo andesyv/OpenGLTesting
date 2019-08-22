@@ -2,7 +2,7 @@
 #include "vector3d.h"
 #include <cmath>
 
-namespace gsl
+namespace glm
 {
     Vector2D::Vector2D(GLfloat x_in, GLfloat y_in) : x{x_in}, y{y_in}
     {

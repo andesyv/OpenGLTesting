@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace gsl
+namespace glm
 {
 
 class Vector3D;

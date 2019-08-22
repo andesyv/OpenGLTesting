@@ -1,7 +1,7 @@
 #include "matrix4x4.h"
 //#include "quaternion.h"
 #include "math_constants.h"
-#include "gsl_math.h"
+#include "math.h"
 #include "matrix2x2.h"
 #include "matrix3x3.h"
 
@@ -9,7 +9,7 @@
 #include <cstring> // For memcpy on linux
 #include <utility>
 
-namespace gsl
+namespace glm
 {
 
 Matrix4x4::Matrix4x4(bool isIdentity)
@@ -210,7 +210,7 @@ void Matrix4x4::setPosition(GLfloat x, GLfloat y, GLfloat z)
 
 Vector3D Matrix4x4::getPosition()
 {
-    return gsl::Vector3D(matrix[3], matrix[7], matrix[11]);
+    return glm::Vector3D(matrix[3], matrix[7], matrix[11]);
 }
 
 void Matrix4x4::rotateX(GLfloat degrees)
@@ -362,7 +362,7 @@ void Matrix4x4::perspective(GLfloat fieldOfView, GLfloat aspectRatio, GLfloat ne
         farPlane = 100.f;
     }
 
-    GLfloat uh = static_cast<float>(1/std::tan(gsl::deg2rad(static_cast<double>(fieldOfView)/2)));
+    GLfloat uh = static_cast<float>(1/std::tan(glm::deg2rad(static_cast<double>(fieldOfView)/2)));
     GLfloat uw = (1/aspectRatio) * uh;
 
     *this =

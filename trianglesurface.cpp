@@ -117,16 +117,16 @@ void TriangleSurface::construct()
     {
         for (auto y=ymin; y<ymax; y+=h)
         {
-            float z = sin(gsl::PI*x)*sin(gsl::PI*y);
+            float z = sin(glm::PI*x)*sin(glm::PI*y);
             mVertices.push_back(Vertex{x,y,z,x,y,z});
-            z = sin(gsl::PI*(x+h))*sin(gsl::PI*y);
+            z = sin(glm::PI*(x+h))*sin(glm::PI*y);
             mVertices.push_back(Vertex{x+h,y,z,x,y,z});
-            z = sin(gsl::PI*x)*sin(gsl::PI*(y+h));
+            z = sin(glm::PI*x)*sin(glm::PI*(y+h));
             mVertices.push_back(Vertex{x,y+h,z,x,y,z});
             mVertices.push_back(Vertex{x,y+h,z,x,y,z});
-            z = sin(gsl::PI*(x+h))*sin(gsl::PI*y);
+            z = sin(glm::PI*(x+h))*sin(glm::PI*y);
             mVertices.push_back(Vertex{x+h,y,z,x,y,z});
-            z = sin(gsl::PI*(x+h))*sin(gsl::PI*(y+h));
+            z = sin(glm::PI*(x+h))*sin(glm::PI*(y+h));
             mVertices.push_back(Vertex{x+h,y+h,z,x,y,z});
         }
     }

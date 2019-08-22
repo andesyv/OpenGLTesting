@@ -1,10 +1,10 @@
-#include "gsl_math.h"
+#include "math.h"
 #include <array>
 #include <vector>
 #include <QDebug>
 #include "matrix4x4.h"
 
-namespace gsl
+namespace glm
 {
     GLdouble rad2deg(GLdouble rad)
     {

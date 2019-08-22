@@ -1,9 +1,10 @@
 #include "vector3d.h"
 #include "math_constants.h"
-#include "gsl_math.h"
+#include "math.h"
 #include <cmath>
+#include <QVector3D>
 
-namespace gsl
+namespace glm
 {
 
     Vector3D::Vector3D(GLfloat x_in, GLfloat y_in, GLfloat z_in) : x{x_in}, y{y_in}, z{z_in}
@@ -134,7 +135,7 @@ namespace gsl
     void Vector3D::rotateX(GLfloat angle)
     {
         Vector3D dir;
-        angle = gsl::deg2rad(angle);
+        angle = glm::deg2rad(angle);
 
         dir.setX(x);
         dir.setY((y * std::cos(angle)) + (z * (-std::sin(angle))));
@@ -149,7 +150,7 @@ namespace gsl
     void Vector3D::rotateY(GLfloat angle)
     {
         Vector3D dir;
-        angle = gsl::deg2rad(angle);
+        angle = glm::deg2rad(angle);
 
         dir.setX((x * std::cos(angle)) + (z * std::sin(angle)));
         dir.setY(y);
@@ -164,7 +165,7 @@ namespace gsl
     void Vector3D::rotateZ(GLfloat angle)
     {
         Vector3D dir;
-        angle = gsl::deg2rad(angle);
+        angle = glm::deg2rad(angle);
 
         dir.setX((x * std::cos(angle)) + (y * (-std::sin(angle))));
         dir.setY((x * std::sin(angle)) + (y * std::cos(angle)));
@@ -188,6 +189,11 @@ namespace gsl
     GLfloat *Vector3D::zP()
     {
         return &z;
+    }
+
+    QVector3D Vector3D::getQVector() const
+    {
+        return QVector3D(x, y, z);
     }
 
 

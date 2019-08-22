@@ -16,7 +16,7 @@ public:
     virtual void init();
     virtual void draw()=0;
 
-    gsl::Matrix4x4 mMatrix;
+    glm::Matrix4x4 mMatrix;
 
     std::string mName;
 

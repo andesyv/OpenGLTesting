@@ -33,10 +33,10 @@ void Camera::updateRightVector()
 
 void Camera::updateForwardVector()
 {
-    mRight = gsl::Vector3D(-1.f, 0.f, 0.f);
+    mRight = glm::Vector3D(-1.f, 0.f, 0.f);
     mRight.rotateY(mYaw);
     mRight.normalize();
-    mUp = gsl::Vector3D(0.f, 1.f, 0.f);
+    mUp = glm::Vector3D(0.f, 1.f, 0.f);
     mUp.rotateX(mPitch);
     mUp.normalize();
     mForward = mUp^mRight;
@@ -58,7 +58,7 @@ void Camera::update()
     mViewMatrix.translate(mPosition);
 }
 
-void Camera::setPosition(const gsl::Vector3D &position)
+void Camera::setPosition(const glm::Vector3D &position)
 {
     mPosition = position;
 }
@@ -78,17 +78,17 @@ void Camera::moveRight(float delta)
     //This fixes a bug in the up and right calculations
     //so camera always holds its height when straifing
     //should be fixed thru correct right calculations!
-    gsl::Vector3D right = mRight;
+    glm::Vector3D right = mRight;
     right.y = 0.f;
     mPosition += right * delta;
 }
 
-gsl::Vector3D Camera::position() const
+glm::Vector3D Camera::position() const
 {
     return mPosition;
 }
 
-gsl::Vector3D Camera::up() const
+glm::Vector3D Camera::up() const
 {
     return mUp;
 }

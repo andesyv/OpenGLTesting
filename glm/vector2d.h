@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-namespace gsl
+namespace glm
 {
 
 class Vector2D

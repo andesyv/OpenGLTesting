@@ -1,16 +1,15 @@
 #ifndef MATRIX4X4_H
 #define MATRIX4X4_H
 
+#include "mathfwd.h"
 #include "vector3d.h"
 #include "vector4d.h"
 #include "gltypes.h"
 #include <iostream>
 #include <iomanip>
 
-namespace gsl
+namespace glm
 {
-class Matrix2x2;
-class Matrix3x3;
 
 class Matrix4x4
 {
@@ -28,7 +27,7 @@ public:
     void translateZ(GLfloat z = 0.f);
 
     void setPosition(GLfloat x = 0.f, GLfloat y = 0.f, GLfloat z = 0.f);
-    gsl::Vector3D getPosition();
+    glm::Vector3D getPosition();
 
     //Rotate using EulerMatrix
     void rotateX(GLfloat degrees = 0.f);

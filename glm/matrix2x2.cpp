@@ -2,7 +2,7 @@
 #include "matrix3x3.h"
 #include "matrix4x4.h"
 
-namespace gsl
+namespace glm
 {
     Matrix2x2::Matrix2x2(bool isIdentity)
     {

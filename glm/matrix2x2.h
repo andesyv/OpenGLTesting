@@ -1,17 +1,15 @@
 #ifndef MATRIX2X2_H
 #define MATRIX2X2_H
 
+#include "mathfwd.h"
 #include "vector2d.h"
 #include "vector3d.h"
 #include "gltypes.h"
 #include <utility>
 #include <iomanip>
 
-namespace gsl
+namespace glm
 {
-
-class Matrix3x3;
-class Matrix4x4;
 
 class Matrix2x2
 {

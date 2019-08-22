@@ -1,7 +1,7 @@
 #ifndef MATH_CONSTANTS_H
 #define MATH_CONSTANTS_H
 
-namespace gsl
+namespace glm
 {
     // Mathematical constants
     constexpr double PI_D = 3.141592653589793238462643383279502884;

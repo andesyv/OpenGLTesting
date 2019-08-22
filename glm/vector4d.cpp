@@ -2,7 +2,7 @@
 #include "vector3d.h"
 #include <cmath>
 
-namespace gsl
+namespace glm
 {
 
     Vector4D::Vector4D(GLfloat x_in, GLfloat y_in, GLfloat z_in, GLfloat w_in) : x{x_in}, y{y_in}, z{z_in}, w{w_in}

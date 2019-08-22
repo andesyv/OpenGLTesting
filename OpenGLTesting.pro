@@ -5,16 +5,16 @@ CONFIG      += c++14
 
 TARGET      = OpenGLTesting
 
-INCLUDEPATH +=  ./GSL
+INCLUDEPATH +=  ./glm
 
 SOURCES += main.cpp \
-    GSL/matrix2x2.cpp \
-    GSL/matrix3x3.cpp \
-    GSL/matrix4x4.cpp \
-    GSL/vector2d.cpp \
-    GSL/vector3d.cpp \
-    GSL/vector4d.cpp \
-    GSL/gsl_math.cpp \
+    glm/math.cpp \
+    glm/matrix2x2.cpp \
+    glm/matrix3x3.cpp \
+    glm/matrix4x4.cpp \
+    glm/vector2d.cpp \
+    glm/vector3d.cpp \
+    glm/vector4d.cpp \
     renderwindow.cpp \
     shader.cpp \
     mainwindow.cpp \
@@ -28,14 +28,15 @@ SOURCES += main.cpp \
     camera.cpp
 
 HEADERS += \
-    GSL/matrix2x2.h \
-    GSL/matrix3x3.h \
-    GSL/matrix4x4.h \
-    GSL/vector2d.h \
-    GSL/vector3d.h \
-    GSL/vector4d.h \
-    GSL/gsl_math.h \
-    GSL/math_constants.h \
+    glm/math.h \
+    glm/math_constants.h \
+    glm/mathfwd.h \
+    glm/matrix2x2.h \
+    glm/matrix3x3.h \
+    glm/matrix4x4.h \
+    glm/vector2d.h \
+    glm/vector3d.h \
+    glm/vector4d.h \
     renderwindow.h \
     shader.h \
     mainwindow.h \
