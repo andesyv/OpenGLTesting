@@ -1,12 +1,8 @@
 #ifndef GLM_MATH_H
 #define GLM_MATH_H
 
-#include "vector2d.h"
-#include "vector3d.h"
-#include "vector4d.h"
-#include "math_constants.h"
+#include "mathfwd.h"
 #include "gltypes.h"
-#include "matrix3x3.h"
 #include <vector>
 
 namespace glm

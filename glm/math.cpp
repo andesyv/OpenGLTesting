@@ -2,6 +2,11 @@
 #include <array>
 #include <vector>
 #include <QDebug>
+#include "vector2d.h"
+#include "vector3d.h"
+#include "vector4d.h"
+#include "math_constants.h"
+#include "matrix3x3.h"
 #include "matrix4x4.h"
 
 namespace glm
