@@ -106,6 +106,11 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
+    temp = new TriangleSurface{};
+    temp->init();
+    temp->mMatrix.translate(3.f, -1.f, -3.f);
+    mVisualObjects.push_back(temp);
+
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
     mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, -2.f));
@@ -139,6 +144,12 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glUniform1i(mTextureUniform, 1);
         mVisualObjects[1]->draw();
+
+        glUseProgram(mShaderProgram[0]->getProgram());
+        glUniformMatrix4fv(mShaderProgram[0]->mMatrixUniform, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        glUniformMatrix4fv(mShaderProgram[0]->vMatrixUniform, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv(mShaderProgram[0]->pMatrixUniform, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        mVisualObjects[2]->draw();
     }
 
     //Calculate framerate before
