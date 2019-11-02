@@ -15,6 +15,7 @@ SOURCES += main.cpp \
     GSL/vector3d.cpp \
     GSL/vector4d.cpp \
     GSL/gsl_math.cpp \
+    octahedronball.cpp \
     renderwindow.cpp \
     shader.cpp \
     mainwindow.cpp \
@@ -36,6 +37,7 @@ HEADERS += \
     GSL/vector4d.h \
     GSL/gsl_math.h \
     GSL/math_constants.h \
+    octahedronball.h \
     renderwindow.h \
     shader.h \
     mainwindow.h \

@@ -14,6 +14,7 @@
 
 #include "xyz.h"
 #include "trianglesurface.h"
+#include "octahedronball.h"
 
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow)
@@ -106,6 +107,10 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
+    temp = new OctahedronBall{4};
+    temp->init();
+    mVisualObjects.push_back(temp);
+
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();
     mCurrentCamera->setPosition(gsl::Vector3D(-1.f, -.5f, -2.f));
@@ -139,6 +144,13 @@ void RenderWindow::render()
         glUniformMatrix4fv( mMatrixUniform1, 1, GL_TRUE, mVisualObjects[1]->mMatrix.constData());
         glUniform1i(mTextureUniform, 1);
         mVisualObjects[1]->draw();
+
+        glUseProgram(mShaderProgram[0]->getProgram());
+        glUniformMatrix4fv( vMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mViewMatrix.constData());
+        glUniformMatrix4fv( pMatrixUniform0, 1, GL_TRUE, mCurrentCamera->mProjectionMatrix.constData());
+        glUniformMatrix4fv( mMatrixUniform0, 1, GL_TRUE, mVisualObjects[2]->mMatrix.constData());
+        // glUniform1i(mTextureUniform, 1);
+        mVisualObjects[2]->draw();
     }
 
     //Calculate framerate before
