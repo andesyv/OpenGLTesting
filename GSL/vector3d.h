@@ -57,14 +57,13 @@ public:
     //Friend functions
     friend std::ostream& operator<<(std::ostream &output, const Vector3D &rhs )
     {
-        output << "X = " << rhs.x << ", Y = " << rhs.y << ", Z = " << rhs.z;
-        return output;
+        return output << "(" << rhs.x << ", " << rhs.y << ", " << rhs.z << ")";
     }
 
     //OEF: Adding these again to be able to debug easier. cout does not print until program is finished!
     friend QDebug operator<<(QDebug out, const Vector3D &rhs)
     {
-        out << "(" << rhs.x << "," << rhs.y << "," << rhs.z << ")";
+        out << "(" << rhs.x << ", " << rhs.y << ", " << rhs.z << ")";
         return  out;
     }        //    QVector3D getQVector() const;   //for use with qDebug()
 

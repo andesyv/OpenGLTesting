@@ -42,8 +42,7 @@ public:
     //Friend functions
     friend std::ostream& operator<<(std::ostream &output, const Vector2D &rhs)
     {
-        output << "(" << rhs.x << "," << rhs.y << ")";
-        return output;
+        return output << "(" << rhs.x << ", " << rhs.y << ")";
     }
 
     GLfloat x;

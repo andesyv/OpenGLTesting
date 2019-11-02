@@ -107,9 +107,12 @@ void RenderWindow::init()
     temp->init();
     mVisualObjects.push_back(temp);
 
-    temp = new OctahedronBall{4};
+    temp = new OctahedronBall{1};
     temp->init();
     mVisualObjects.push_back(temp);
+
+    if (!temp->writeFile("ball_L02.txt"))
+        std::cout << "Failed to write to file" << std::endl;
 
     //********************** Set up camera **********************
     mCurrentCamera = new Camera();

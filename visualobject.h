@@ -16,6 +16,8 @@ public:
     virtual void init();
     virtual void draw()=0;
 
+    bool writeFile(std::string fileName);
+
     gsl::Matrix4x4 mMatrix;
 
     std::string mName;
